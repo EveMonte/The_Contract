@@ -5,32 +5,50 @@ using UnityEngine;
 public class PlatformMotion : MonoBehaviour
 {
     [HideInInspector]
-    public bool isMoving = false;
-    [SerializeField]
-    private float _speed = 2;
-    private float timeCount = 0;
-    private Vector3 _startPosition;
+    public bool isMovingDown = true;
+    public bool isMovingUp = false;
 
     // Start is called before the first frame update
     void Start()
     {
-        _startPosition = transform.position;
 
-   }
+    }
 
     // Update is called once per frame
-    void Update()
+    public void MoveDown()
     {
-        if (isMoving)
+        if (isMovingDown)
         {
-            transform.position = Vector3.Lerp(_startPosition, gameObject.GetComponent<MeshRenderer>().probeAnchor.position, timeCount * _speed);
-            //go.transform.rotation = rot * go.transform.rotation;
-            timeCount += Time.deltaTime;
-            if (timeCount >= 1)
-            {
-                isMoving = false;
-                timeCount = 0f;
-            }
+            Debug.Log("down");
+            if (gameObject.GetComponent<Rigidbody>() == null)
+                gameObject.AddComponent<Rigidbody>();
+            GetComponent<Rigidbody>().useGravity = false;
+            GetComponent<Rigidbody>().AddForce(new Vector3(0, -0.5f, 0), ForceMode.Impulse);
+            isMovingDown = false;
+            isMovingUp = true;
+            StartCoroutine("StopMotion", false);
         }
+    }
+    public void MoveUp()
+    {
+        if (isMovingUp)
+        {
+            Debug.Log("up");
+            if (gameObject.GetComponent<Rigidbody>() == null)
+                gameObject.AddComponent<Rigidbody>();
+            GetComponent<Rigidbody>().useGravity = false;
+            GetComponent<Rigidbody>().AddForce(new Vector3(0, 0.5f, 0), ForceMode.Impulse);
+            isMovingUp = false;
+            isMovingDown = true;
+            StartCoroutine("StopMotion", true);
+        }
+    }
+
+    public IEnumerator StopMotion(bool flag)
+    {
+        yield return new WaitForSeconds(0.3f);
+        Destroy(GetComponent<Rigidbody>());
+        isMovingDown = flag;
+        isMovingUp = !flag;
     }
 }

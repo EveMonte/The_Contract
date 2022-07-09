@@ -20,7 +20,9 @@ public class RelativeMovement : MonoBehaviour
     private bool _canDoubleJump = true;
     public GameObject follow;
     AnimatorClipInfo[] m_CurrentClipInfo;
-    private bool _gotDoubleJump = false;
+    [HideInInspector]
+    public bool _gotDoubleJump = false;
+    private ControllerColliderHit _hit;
 
     // Start is called before the first frame update
     void Start()
@@ -34,7 +36,7 @@ public class RelativeMovement : MonoBehaviour
     void Update()
     {
         Vector3 movement = Vector3.zero;
-        float vertInput = Input.GetAxisRaw("Vertical");
+        float vertInput = Input.GetAxisRaw("Horizontal");
         if(vertInput != 0)
         {
             movement.z = vertInput * moveSpeed;
@@ -59,6 +61,11 @@ public class RelativeMovement : MonoBehaviour
                 _animator.SetBool("Jumping", true);
                 _vertSpeed = jumpSpeed;
                 _canDoubleJump = true;
+                if (_contact.gameObject.tag == "disposable")
+                {
+                    _contact.gameObject.SendMessage("Break", jumpSpeed);
+                }
+                _contact.gameObject.SendMessage("MoveUp", SendMessageOptions.DontRequireReceiver);
 
             }
             else
@@ -75,7 +82,6 @@ public class RelativeMovement : MonoBehaviour
                 {
                     _vertSpeed = jumpSpeed;
                     _canDoubleJump = false;
-
                 }
             }
 
@@ -110,20 +116,34 @@ public class RelativeMovement : MonoBehaviour
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         _contact = hit;
+        if(hit.gameObject.tag == "disposable")
+        {
+            hit.gameObject.SendMessage("Ready");
+
+        }
+        else if(hit.gameObject.tag == "fake")
+        {
+            hit.gameObject.SendMessage("Break", jumpSpeed);
+        }
+        hit.gameObject.SendMessage("MoveDown", SendMessageOptions.DontRequireReceiver);
     }
-    private void OnTriggerExit(Collider other)
+    //private void OnTriggerExit(Collider other)
+    //{
+    //    if (other.gameObject.tag == "OffDoubleJump")
+    //    {
+    //        _gotDoubleJump = false;
+    //    }
+    //    else if (other.gameObject.tag == "OnDoubleJump")
+    //    {
+    //        _gotDoubleJump = true;
+    //        if(od !=null)
+    //            Destroy(od);
+
+    //    }
+
+    //}
+    private void ActivateDoubleJump()
     {
-        if (other.gameObject.tag == "OffDoubleJump")
-        {
-            _gotDoubleJump = false;
-        }
-        else if (other.gameObject.tag == "OnDoubleJump")
-        {
-            _gotDoubleJump = true;
-            if(od !=null)
-                Destroy(od);
-
-        }
-
+        _gotDoubleJump = true;
     }
 }
