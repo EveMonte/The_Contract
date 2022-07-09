@@ -7280,7 +7280,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 619089909}
   m_LocalRotation: {x: 0.08319813, y: -0.6263727, z: 0.06749283, w: 0.77212703}
-  m_LocalPosition: {x: 27.99, y: 8.050974, z: 85.008125}
+  m_LocalPosition: {x: 32.98, y: 9.18, z: 85.008125}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -9070,7 +9070,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c8f013fabae2a94e8f30404bc4e8cd2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  od: {fileID: 0}
   moveSpeed: 3
   jumpSpeed: 8.5
   gravity: -5
@@ -9078,6 +9077,41 @@ MonoBehaviour:
   minFall: -4.5
   follow: {fileID: 1000348843}
   _gotDoubleJump: 0
+  _duration: 1
+  _height: 2
+  _yAnimation:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.4
+      value: 1
+      inSlope: -0.10255718
+      outSlope: -0.10255718
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!143 &803669170
 CharacterController:
   m_ObjectHideFlags: 0
@@ -10281,7 +10315,6 @@ GameObject:
   m_Component:
   - component: {fileID: 898063151}
   - component: {fileID: 898063150}
-  - component: {fileID: 898063152}
   m_Layer: 0
   m_Name: CM vcam1
   m_TagString: Untagged
@@ -10332,30 +10365,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 898063149}
   m_LocalRotation: {x: 0.08319813, y: -0.6263727, z: 0.06749283, w: 0.77212703}
-  m_LocalPosition: {x: 15.891377, y: -1.7914245, z: -104.623924}
+  m_LocalPosition: {x: 24.494825, y: 0.15517268, z: -104.623924}
   m_LocalScale: {x: 1.724138, y: 1.7241379, z: 1.7241378}
   m_Children:
   - {fileID: 934457435}
   m_Father: {fileID: 324362467}
   m_RootOrder: 21
   m_LocalEulerAnglesHint: {x: 12.3, y: -78.1, z: 0}
---- !u!114 &898063152
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 898063149}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 90c4f369ee4db2645bf56b9bae109c75, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _start: {fileID: 1885284308}
-  _target: {fileID: 669895518}
-  _timeCount: 0
-  _speed: 1
-  isMoving: 0
 --- !u!1 &899104860
 GameObject:
   m_ObjectHideFlags: 0
@@ -10843,7 +10859,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BindingMode: 0
-  m_FollowOffset: {x: 8.49, y: -4.299026, z: -0.3618757}
+  m_FollowOffset: {x: 13.48, y: -3.17, z: -0.3618757}
   m_XDamping: 1
   m_YDamping: 1
   m_ZDamping: 1
