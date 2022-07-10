@@ -20,17 +20,19 @@ public class RelativeMovement : MonoBehaviour
     public GameObject follow;
     AnimatorClipInfo[] m_CurrentClipInfo;
     [HideInInspector]
-    public bool _gotDoubleJump = false;
+    public bool _gotDoubleJump = true;
     private ControllerColliderHit _hit;
     [SerializeField] private float _duration;
     private Vector3 movement = Vector3.zero;
     [SerializeField] private float _height;
     private bool isJumping;
+    private Coroutine _jumping;
     void Start()
     {
         _charController = GetComponent<CharacterController>();
         _vertSpeed = minFall;
         _animator = GetComponent<Animator>();
+        ActivateDoubleJump();
     }
 
     // Update is called once per frame
@@ -75,7 +77,7 @@ public class RelativeMovement : MonoBehaviour
             else
             {
                 _vertSpeed = minFall;
-                _animator.SetBool("Jumping", false);
+                //_animator.SetBool("Jumping", false);
             }
         }
         else
@@ -84,7 +86,12 @@ public class RelativeMovement : MonoBehaviour
             {
                 if (_canDoubleJump && _gotDoubleJump)
                 {
-                    _vertSpeed = jumpSpeed;
+                    _animator.SetBool("Jumping", false);
+                    StopCoroutine(_jumping);
+                    PlayAnimations(transform);
+                    _animator.SetBool("DoubleJump", true);
+                    Debug.Log("Input " + _animator.GetBool("Jumping") + " " + _animator.GetFloat("Speed"));
+
                     _canDoubleJump = false;
                 }
             }
@@ -96,11 +103,10 @@ public class RelativeMovement : MonoBehaviour
             }
             if (_contact != null)
             {
-                _animator.SetBool("Jumping", true);
             }
             if (_charController.isGrounded)
             {
-                _animator.SetBool("Jumping", false);
+                _animator.SetBool("DoubleJump", false);
 
                 if (Vector3.Dot(movement, _contact.normal) < 0)
                 {
@@ -142,13 +148,13 @@ public class RelativeMovement : MonoBehaviour
     [ContextMenu("Play Animations")]
     public void PlayAnimations(Transform transform)
     {
-        StartCoroutine(AnimationByTime(transform));
+        _jumping = StartCoroutine(AnimationByTime(transform));
     }
 
     public IEnumerator AnimationByTime(Transform _transform)
     {
         isJumping = true;
-        Vector3 startPosition = _transform.position;
+        Vector3 startPosition = transform.position;
         float expiredSeconds = 0;
         float progress = 0;
         while (progress < 1)
@@ -156,10 +162,13 @@ public class RelativeMovement : MonoBehaviour
             expiredSeconds += Time.deltaTime;
             progress = expiredSeconds / _duration;
             movement.y = startPosition.y + _height * _yAnimation.Evaluate(progress) - transform.position.y;
-            Debug.Log(movement.y);
             _charController.Move(movement);
+            Debug.Log("Coroutine " + movement.y + " " + _animator.GetBool("Jumping") + " height " + _height * _yAnimation.Evaluate(progress) + " start position " + startPosition.y + " current position " + transform.position.y + " progress " + progress);
+            
             yield return null;
         }
+        _animator.SetBool("Jumping", false);
+        _animator.SetBool("DoubleJump", false);
         isJumping = false;
     }
 

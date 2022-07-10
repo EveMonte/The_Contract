@@ -19,7 +19,6 @@ public class PlatformMotion : MonoBehaviour
     {
         if (isMovingDown)
         {
-            Debug.Log("down");
             if (gameObject.GetComponent<Rigidbody>() == null)
                 gameObject.AddComponent<Rigidbody>();
             GetComponent<Rigidbody>().useGravity = false;
@@ -33,7 +32,6 @@ public class PlatformMotion : MonoBehaviour
     {
         if (isMovingUp)
         {
-            Debug.Log("up");
             if (gameObject.GetComponent<Rigidbody>() == null)
                 gameObject.AddComponent<Rigidbody>();
             GetComponent<Rigidbody>().useGravity = false;
