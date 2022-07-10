@@ -27,6 +27,9 @@ public class RelativeMovement : MonoBehaviour
     [SerializeField] private float _height;
     private bool isJumping;
     private Coroutine _jumping;
+    private float vertSpeed;
+
+    private bool hitGround;
     void Start()
     {
         _charController = GetComponent<CharacterController>();
@@ -38,33 +41,41 @@ public class RelativeMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         Vector3 movement = Vector3.zero;
-        float vertInput = Input.GetAxisRaw("Horizontal");
+        float vertInput = Input.GetAxis("Horizontal");
         if (vertInput != 0)
         {
             movement.z = vertInput * moveSpeed;
             movement = Vector3.ClampMagnitude(movement, moveSpeed);
-
         }
         if (movement != Vector3.zero)
             transform.rotation = Quaternion.LookRotation(movement);
         _animator.SetFloat("Speed", movement.sqrMagnitude);
         m_CurrentClipInfo = this._animator.GetCurrentAnimatorClipInfo(0);
-        bool hitGround = false;
+        hitGround = false;
         RaycastHit hit;
-        if (_vertSpeed < 0 && Physics.Raycast(transform.position, Vector3.down, out hit))
+        if (Physics.Raycast(transform.position + _charController.center, Vector3.down, out hit))
         {
-            float check =
-            (_charController.height + _charController.radius) / 1.9f;
-            hitGround = hit.distance <= check;
+            float check = (_charController.height + _charController.radius) / 1.95f;
+            hitGround = hit.distance <= check;  // to be sure check slightly beyond bottom of capsule
+            Debug.Log(hit.distance  + " " + check + hit.transform.gameObject.name);
+
         }
         if (hitGround)
         {
-            if (Input.GetButtonDown("Jump"))
+            //Debug.Log(transform.position.y);
+            //if(!isJumping)
+            _animator.SetBool("Jumping", false);
+            if (Input.GetButtonDown("Jump") && !isJumping)
             {
-                _animator.SetBool("Jumping", true);
+                //Debug.Log("Jump");
                 _canDoubleJump = true;
+                vertSpeed = jumpSpeed;
+
                 PlayAnimations(transform);
+                _animator.SetBool("Jumping", true);
+
                 if (_contact != null)
                 {
                     if (_contact.gameObject.tag == "disposable")
@@ -82,32 +93,35 @@ public class RelativeMovement : MonoBehaviour
         }
         else
         {
-            if (Input.GetButtonDown("Jump"))
+            if (Input.GetButtonDown("Jump") &&  _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
             {
+                Debug.Log(_animator.GetBool("DoubleJump") + " " + _animator.GetBool("Jumping") + " " + hitGround);
+
                 if (_canDoubleJump && _gotDoubleJump)
                 {
-                    _animator.SetBool("Jumping", false);
                     StopCoroutine(_jumping);
                     PlayAnimations(transform);
                     _animator.SetBool("DoubleJump", true);
-                    Debug.Log("Input " + _animator.GetBool("Jumping") + " " + _animator.GetFloat("Speed"));
+                    //Debug.Log("Input " + _animator.GetBool("Jumping") + " " + _animator.GetFloat("Speed"));
 
                     _canDoubleJump = false;
                 }
             }
 
-            _vertSpeed += gravity * 5 * Time.deltaTime;
-            if (_vertSpeed < terminalVelocity)
+   
+            vertSpeed += gravity * 5 * Time.deltaTime;
+            if (vertSpeed < terminalVelocity)
             {
-                _vertSpeed = terminalVelocity;
+                vertSpeed = terminalVelocity;
             }
             if (_contact != null)
-            {
+            {   // not right at level start
+                //_animator.SetBool("Jumping", true);
             }
+
+            // workaround for standing on dropoff edge
             if (_charController.isGrounded)
             {
-                _animator.SetBool("DoubleJump", false);
-
                 if (Vector3.Dot(movement, _contact.normal) < 0)
                 {
                     movement = _contact.normal * moveSpeed;
@@ -119,7 +133,7 @@ public class RelativeMovement : MonoBehaviour
             }
         }
         //if(!isJumping)
-            movement.y = _vertSpeed;
+        movement.y = _vertSpeed;
         movement *= Time.deltaTime;
         _charController.Move(movement);
     }
@@ -163,12 +177,15 @@ public class RelativeMovement : MonoBehaviour
             progress = expiredSeconds / _duration;
             movement.y = startPosition.y + _height * _yAnimation.Evaluate(progress) - transform.position.y;
             _charController.Move(movement);
-            Debug.Log("Coroutine " + movement.y + " " + _animator.GetBool("Jumping") + " height " + _height * _yAnimation.Evaluate(progress) + " start position " + startPosition.y + " current position " + transform.position.y + " progress " + progress);
-            
+            //Debug.Log(_animator.GetBool("DoubleJump") + " " + progress + " " + _animator.GetBool("Jumping") + " " + hitGround);
+            //Debug.Log("Coroutine " + movement.y + " " + _animator.GetBool("Jumping") + " height " + _height * _yAnimation.Evaluate(progress) + " start position " + startPosition.y + " current position " + transform.position.y + " progress " + progress);
+            if (progress > 0.85f)
+            {
+                _animator.SetBool("DoubleJump", false);
+            }
             yield return null;
         }
-        _animator.SetBool("Jumping", false);
-        _animator.SetBool("DoubleJump", false);
+        //_animator.SetBool("DoubleJump", false);
         isJumping = false;
     }
 
