@@ -44,30 +44,31 @@ public class RelativeMovement : MonoBehaviour
 
         Vector3 movement = Vector3.zero;
         float vertInput = Input.GetAxis("Horizontal");
-        if (vertInput != 0)
+        if (vertInput != 0 && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
         {
             movement.z = vertInput * moveSpeed;
             movement = Vector3.ClampMagnitude(movement, moveSpeed);
         }
         if (movement != Vector3.zero)
             transform.rotation = Quaternion.LookRotation(movement);
+
         _animator.SetFloat("Speed", movement.sqrMagnitude);
-        m_CurrentClipInfo = this._animator.GetCurrentAnimatorClipInfo(0);
         hitGround = false;
         RaycastHit hit;
         if (Physics.Raycast(transform.position + _charController.center, Vector3.down, out hit))
         {
             float check = (_charController.height + _charController.radius) / 1.95f;
             hitGround = hit.distance <= check;  // to be sure check slightly beyond bottom of capsule
-            Debug.Log(hit.distance  + " " + check + hit.transform.gameObject.name);
 
         }
-        if (hitGround)
+        if (hitGround) // character is on the ground
         {
-            //Debug.Log(transform.position.y);
-            //if(!isJumping)
-            _animator.SetBool("Jumping", false);
-            if (Input.GetButtonDown("Jump") && !isJumping)
+            if (!isJumping)
+                _animator.SetBool("Jumping", false);
+            else
+                _animator.SetBool("Jumping", true);
+            _animator.SetBool("Falling", false);
+            if (Input.GetButtonDown("Jump") && !isJumping && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
             {
                 //Debug.Log("Jump");
                 _canDoubleJump = true;
@@ -93,9 +94,11 @@ public class RelativeMovement : MonoBehaviour
         }
         else
         {
+            if (!isJumping)
+                _animator.SetBool("Falling", true);
             if (Input.GetButtonDown("Jump") &&  _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
             {
-                Debug.Log(_animator.GetBool("DoubleJump") + " " + _animator.GetBool("Jumping") + " " + hitGround);
+                //Debug.Log(_animator.GetBool("DoubleJump") + " " + _animator.GetBool("Jumping") + " " + hitGround);
 
                 if (_canDoubleJump && _gotDoubleJump)
                 {
