@@ -17,17 +17,14 @@ public class RelativeMovement : MonoBehaviour
     private ControllerColliderHit _contact;
     private Animator _animator;
     private bool _canDoubleJump = true;
-    public GameObject follow;
-    AnimatorClipInfo[] m_CurrentClipInfo;
-    [HideInInspector]
-    public bool _gotDoubleJump = true;
-    private ControllerColliderHit _hit;
+    private bool _gotDoubleJump = true;
     [SerializeField] private float _duration;
     private Vector3 movement = Vector3.zero;
     [SerializeField] private float _height;
     private bool isJumping;
     private Coroutine _jumping;
     private float vertSpeed;
+    [SerializeField] private AnimationCurve _yAnimation;
 
     private bool hitGround;
     void Start()
@@ -68,13 +65,12 @@ public class RelativeMovement : MonoBehaviour
             else
                 _animator.SetBool("Jumping", true);
             _animator.SetBool("Falling", false);
-            if (Input.GetButtonDown("Jump") && !isJumping && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
+            if (Input.GetButtonDown("Jump") && (!isJumping || _animator.GetBool("Falling")) && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
             {
-                //Debug.Log("Jump");
                 _canDoubleJump = true;
                 vertSpeed = jumpSpeed;
 
-                PlayAnimations(transform);
+                _jumping = StartCoroutine(AnimationByTime(transform)); 
                 _animator.SetBool("Jumping", true);
 
                 if (_contact != null)
@@ -89,7 +85,6 @@ public class RelativeMovement : MonoBehaviour
             else
             {
                 _vertSpeed = minFall;
-                //_animator.SetBool("Jumping", false);
             }
         }
         else
@@ -98,14 +93,13 @@ public class RelativeMovement : MonoBehaviour
                 _animator.SetBool("Falling", true);
             if (Input.GetButtonDown("Jump") &&  _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
             {
-                //Debug.Log(_animator.GetBool("DoubleJump") + " " + _animator.GetBool("Jumping") + " " + hitGround);
 
                 if (_canDoubleJump && _gotDoubleJump)
                 {
-                    StopCoroutine(_jumping);
-                    PlayAnimations(transform);
+                    if(_jumping != null)
+                        StopCoroutine(_jumping);
+                    _jumping = StartCoroutine(AnimationByTime(transform));
                     _animator.SetBool("DoubleJump", true);
-                    //Debug.Log("Input " + _animator.GetBool("Jumping") + " " + _animator.GetFloat("Speed"));
 
                     _canDoubleJump = false;
                 }
@@ -116,10 +110,6 @@ public class RelativeMovement : MonoBehaviour
             if (vertSpeed < terminalVelocity)
             {
                 vertSpeed = terminalVelocity;
-            }
-            if (_contact != null)
-            {   // not right at level start
-                //_animator.SetBool("Jumping", true);
             }
 
             // workaround for standing on dropoff edge
@@ -135,7 +125,6 @@ public class RelativeMovement : MonoBehaviour
                 }
             }
         }
-        //if(!isJumping)
         movement.y = _vertSpeed;
         movement *= Time.deltaTime;
         _charController.Move(movement);
@@ -160,13 +149,6 @@ public class RelativeMovement : MonoBehaviour
     {
         _gotDoubleJump = true;
     }
-    [SerializeField] private AnimationCurve _yAnimation;
-
-    [ContextMenu("Play Animations")]
-    public void PlayAnimations(Transform transform)
-    {
-        _jumping = StartCoroutine(AnimationByTime(transform));
-    }
 
     public IEnumerator AnimationByTime(Transform _transform)
     {
@@ -180,15 +162,12 @@ public class RelativeMovement : MonoBehaviour
             progress = expiredSeconds / _duration;
             movement.y = startPosition.y + _height * _yAnimation.Evaluate(progress) - transform.position.y;
             _charController.Move(movement);
-            //Debug.Log(_animator.GetBool("DoubleJump") + " " + progress + " " + _animator.GetBool("Jumping") + " " + hitGround);
-            //Debug.Log("Coroutine " + movement.y + " " + _animator.GetBool("Jumping") + " height " + _height * _yAnimation.Evaluate(progress) + " start position " + startPosition.y + " current position " + transform.position.y + " progress " + progress);
             if (progress > 0.85f)
             {
                 _animator.SetBool("DoubleJump", false);
             }
             yield return null;
         }
-        //_animator.SetBool("DoubleJump", false);
         isJumping = false;
     }
 
