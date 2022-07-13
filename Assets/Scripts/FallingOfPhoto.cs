@@ -12,8 +12,8 @@ public class FallingOfPhoto : MonoBehaviour
     private List<GameObject> _platforms;
     [SerializeField]
     private GameObject _ui;
-    [SerializeField]
-    private GameObject _virtualCamera;
+    //[SerializeField]
+    //private GameObject _virtualCamera;
 
     private List<PlatformMotion> _motions;
     private bool _isRotating = false;
@@ -63,10 +63,10 @@ public class FallingOfPhoto : MonoBehaviour
 
     private IEnumerator ShowText()
     {
-        _virtualCamera.GetComponent<CameraZoom>().isMoving = true;
+        //_virtualCamera.GetComponent<CameraZoom>().isMoving = true;
         _ui.SetActive(true);
         _isRotating = true;
-        StartCoroutine("StartPlatformMotion");
+        //StartCoroutine("StartPlatformMotion");
         yield return new WaitForSeconds(2f);
         _ui.SetActive(false);
 
@@ -76,7 +76,7 @@ public class FallingOfPhoto : MonoBehaviour
     {
         for (int i = 0; i < _motions.Count; i++)
         {
-            _motions[i].isMoving = true;
+            //_motions[i].isMoving = true;
             yield return new WaitForSeconds(1.5f);
         }
         Destroy(GetComponent<FallingOfPhoto>());

@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class EnterPuzzle : MonoBehaviour
 {
-    [SerializeField]
-    private GameObject _virtualCamera;
+    //[SerializeField]
+    //private GameObject _virtualCamera;
 
     // Start is called before the first frame update
     private void OnTriggerEnter(Collider other)
     {
-        _virtualCamera.GetComponent<CameraZoom>().isMoving = true;
+        //_virtualCamera.GetComponent<CameraZoom>().isMoving = true;
     }
 }

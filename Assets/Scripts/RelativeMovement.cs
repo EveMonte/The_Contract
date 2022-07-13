@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,8 +7,6 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class RelativeMovement : MonoBehaviour
 {
-    [SerializeField]
-    private GameObject od; 
     public float moveSpeed = 3.0f;
     private CharacterController _charController;
     public float jumpSpeed = 15.0f;
@@ -18,80 +17,105 @@ public class RelativeMovement : MonoBehaviour
     private ControllerColliderHit _contact;
     private Animator _animator;
     private bool _canDoubleJump = true;
-    public GameObject follow;
-    AnimatorClipInfo[] m_CurrentClipInfo;
-    private bool _gotDoubleJump = false;
+    private bool _gotDoubleJump = true;
+    [SerializeField] private float _duration;
+    private Vector3 movement = Vector3.zero;
+    [SerializeField] private float _height;
+    private bool isJumping;
+    private Coroutine _jumping;
+    private float vertSpeed;
+    [SerializeField] private AnimationCurve _yAnimation;
 
-    // Start is called before the first frame update
+    private bool hitGround;
     void Start()
     {
         _charController = GetComponent<CharacterController>();
         _vertSpeed = minFall;
         _animator = GetComponent<Animator>();
+        ActivateDoubleJump();
     }
 
     // Update is called once per frame
     void Update()
     {
+
         Vector3 movement = Vector3.zero;
-        float vertInput = Input.GetAxisRaw("Vertical");
-        if(vertInput != 0)
+        float vertInput = Input.GetAxis("Horizontal");
+        if (vertInput != 0 && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
         {
             movement.z = vertInput * moveSpeed;
             movement = Vector3.ClampMagnitude(movement, moveSpeed);
-
         }
-        if(movement != Vector3.zero)
+        if (movement != Vector3.zero)
             transform.rotation = Quaternion.LookRotation(movement);
-        _animator.SetFloat("Speed", movement.sqrMagnitude);
-        m_CurrentClipInfo = this._animator.GetCurrentAnimatorClipInfo(0);
-        bool hitGround = false;
-        RaycastHit hit;
-        if (_vertSpeed < 0 && Physics.Raycast(transform.position, Vector3.down, out hit)) {
-            float check =
-            (_charController.height + _charController.radius) / 1.9f;
-            hitGround = hit.distance <= check;
-        }
-        if (hitGround)
-        {
-            if (Input.GetButtonDown("Jump"))
-            {
-                _animator.SetBool("Jumping", true);
-                _vertSpeed = jumpSpeed;
-                _canDoubleJump = true;
 
+        _animator.SetFloat("Speed", movement.sqrMagnitude);
+        hitGround = false;
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position + _charController.center, Vector3.down, out hit))
+        {
+            float check = (_charController.height + _charController.radius) / 1.95f;
+            hitGround = hit.distance <= check;  // to be sure check slightly beyond bottom of capsule
+            //Debug.Log("distance " + hit.distance + " " + check);
+        }
+        if (hitGround) // character is on the ground
+        {
+            //Debug.Log("hit");
+            if (!isJumping)
+                _animator.SetBool("Jumping", false);
+            else
+                _animator.SetBool("Jumping", true);
+            _animator.SetBool("Falling", false);
+            if (Input.GetButtonDown("Jump") && (!isJumping || _animator.GetBool("Falling")) && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
+            {
+                _canDoubleJump = true;
+                vertSpeed = jumpSpeed;
+
+                _jumping = StartCoroutine(AnimationByTime(transform)); 
+                _animator.SetBool("Jumping", true);
+
+                if (_contact != null)
+                {
+                    if (_contact.gameObject.tag == "disposable")
+                    {
+                        _contact.gameObject.SendMessage("Break", jumpSpeed);
+                    }
+                    _contact.gameObject.SendMessage("MoveUp", SendMessageOptions.DontRequireReceiver);
+                }
             }
             else
             {
                 _vertSpeed = minFall;
-                _animator.SetBool("Jumping", false);
             }
         }
         else
         {
-            if (Input.GetButtonDown("Jump"))
+            if (!isJumping)
+                _animator.SetBool("Falling", true);
+            if (Input.GetButtonDown("Jump") &&  _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
             {
+
                 if (_canDoubleJump && _gotDoubleJump)
                 {
-                    _vertSpeed = jumpSpeed;
-                    _canDoubleJump = false;
+                    if(_jumping != null)
+                        StopCoroutine(_jumping);
+                    _jumping = StartCoroutine(AnimationByTime(transform));
+                    _animator.SetBool("DoubleJump", true);
 
+                    _canDoubleJump = false;
                 }
             }
 
-            _vertSpeed += gravity * 5 * Time.deltaTime;
-            if (_vertSpeed < terminalVelocity)
+   
+            vertSpeed += gravity * 5 * Time.deltaTime;
+            if (vertSpeed < terminalVelocity)
             {
-                _vertSpeed = terminalVelocity;
+                vertSpeed = terminalVelocity;
             }
-            if (_contact != null)
-            {
-                _animator.SetBool("Jumping", true);
-            }
+
+            // workaround for standing on dropoff edge
             if (_charController.isGrounded)
             {
-                _animator.SetBool("Jumping", false);
-
                 if (Vector3.Dot(movement, _contact.normal) < 0)
                 {
                     movement = _contact.normal * moveSpeed;
@@ -110,20 +134,42 @@ public class RelativeMovement : MonoBehaviour
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         _contact = hit;
+        if (hit.gameObject.tag == "disposable")
+        {
+            hit.gameObject.SendMessage("Ready");
+
+        }
+        else if (hit.gameObject.tag == "fake")
+        {
+            hit.gameObject.SendMessage("Break", jumpSpeed);
+        }
+        hit.gameObject.SendMessage("MoveDown", SendMessageOptions.DontRequireReceiver);
     }
-    private void OnTriggerExit(Collider other)
+
+    private void ActivateDoubleJump()
     {
-        if (other.gameObject.tag == "OffDoubleJump")
-        {
-            _gotDoubleJump = false;
-        }
-        else if (other.gameObject.tag == "OnDoubleJump")
-        {
-            _gotDoubleJump = true;
-            if(od !=null)
-                Destroy(od);
-
-        }
-
+        _gotDoubleJump = true;
     }
+
+    public IEnumerator AnimationByTime(Transform _transform)
+    {
+        isJumping = true;
+        Vector3 startPosition = transform.position;
+        float expiredSeconds = 0;
+        float progress = 0;
+        while (progress < 1)
+        {
+            expiredSeconds += Time.deltaTime;
+            progress = expiredSeconds / _duration;
+            movement.y = startPosition.y + _height * _yAnimation.Evaluate(progress) - transform.position.y;
+            _charController.Move(movement);
+            if (progress > 0.85f)
+            {
+                _animator.SetBool("DoubleJump", false);
+            }
+            yield return null;
+        }
+        isJumping = false;
+    }
+
 }
