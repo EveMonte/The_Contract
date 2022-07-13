@@ -15,7 +15,7 @@ public class FallingOfPhoto : MonoBehaviour
     //[SerializeField]
     //private GameObject _virtualCamera;
 
-    private List<PlatformMotion> _motions;
+    private List<MoveUpPlatformsAfterPuzzle> _motions;
     private bool _isRotating = false;
     private Quaternion _startRotation;
     private float _speed = 2f;
@@ -25,10 +25,10 @@ public class FallingOfPhoto : MonoBehaviour
     void Start()
     {
         _ui.SetActive(false);
-        _motions = new List<PlatformMotion>();
+        _motions = new List<MoveUpPlatformsAfterPuzzle>();
         for (int i = 0; i < _platforms.Count; i++)
         {
-            _motions.Add(_platforms[i].GetComponent<PlatformMotion>());
+            _motions.Add(_platforms[i].GetComponent<MoveUpPlatformsAfterPuzzle>());
         }
         _motions.Reverse();
         _startRotation = _photo.transform.rotation;

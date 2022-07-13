@@ -16,8 +16,8 @@ public class RelativeMovement : MonoBehaviour
     private float _vertSpeed;
     private ControllerColliderHit _contact;
     private Animator _animator;
-    private bool _canDoubleJump = true;
-    private bool _gotDoubleJump = true;
+    private bool _canDoubleJump = false;
+    private bool _gotDoubleJump = false;
     [SerializeField] private float _duration;
     private Vector3 movement = Vector3.zero;
     [SerializeField] private float _height;
@@ -32,7 +32,6 @@ public class RelativeMovement : MonoBehaviour
         _charController = GetComponent<CharacterController>();
         _vertSpeed = minFall;
         _animator = GetComponent<Animator>();
-        ActivateDoubleJump();
     }
 
     // Update is called once per frame
@@ -97,6 +96,7 @@ public class RelativeMovement : MonoBehaviour
 
                 if (_canDoubleJump && _gotDoubleJump)
                 {
+                    Debug.Log("Double Jump");
                     if(_jumping != null)
                         StopCoroutine(_jumping);
                     _jumping = StartCoroutine(AnimationByTime(transform));

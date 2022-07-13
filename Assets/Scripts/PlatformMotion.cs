@@ -6,19 +6,18 @@ public class PlatformMotion : MonoBehaviour
 {
     [HideInInspector]
     public bool isMovingDown = true;
+    [HideInInspector]
     public bool isMovingUp = false;
 
     // Start is called before the first frame update
     void Start()
     {
-
     }
-
-    // Update is called once per frame
     public void MoveDown()
     {
         if (isMovingDown)
         {
+            Debug.Log("down");
             if (gameObject.GetComponent<Rigidbody>() == null)
                 gameObject.AddComponent<Rigidbody>();
             GetComponent<Rigidbody>().useGravity = false;
