@@ -41,7 +41,7 @@ public class RelativeMovement : MonoBehaviour
 
         Vector3 movement = Vector3.zero;
         float vertInput = Input.GetAxis("Horizontal");
-        if (vertInput != 0 && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
+        if (vertInput != 0 && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "OUT")
         {
             movement.z = vertInput * moveSpeed;
             movement = Vector3.ClampMagnitude(movement, moveSpeed);
@@ -66,7 +66,7 @@ public class RelativeMovement : MonoBehaviour
             else
                 _animator.SetBool("Jumping", true);
             _animator.SetBool("Falling", false);
-            if (Input.GetButtonDown("Jump") && (!isJumping || _animator.GetBool("Falling")) && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
+            if (Input.GetButtonDown("Jump") && (!isJumping || _animator.GetBool("Falling")) && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "OUT")
             {
                 _canDoubleJump = true;
                 vertSpeed = jumpSpeed;
