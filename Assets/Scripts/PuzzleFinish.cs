@@ -12,6 +12,8 @@ public class PuzzleFinish : MonoBehaviour
     private bool _isActive = true;
     [SerializeField]
     private GameObject _character;
+    [SerializeField]
+    private Transform _newRespawn;
     // Start is called before the first frame update
     void Start()
     {
@@ -26,10 +28,11 @@ public class PuzzleFinish : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(_isActive && Mathf.Abs(_levers[0].transform.rotation.y) == Mathf.Abs(_levers[1].transform.rotation.y) && Mathf.Abs(_levers[0].transform.rotation.y) == Mathf.Abs(_levers[2].transform.rotation.y))
+        if(_isActive && Quaternion.Angle(_levers[0].transform.rotation, _levers[2].transform.rotation) == 0 && Quaternion.Angle(_levers[0].transform.rotation, _levers[1].transform.rotation) == 0)
         {
             StartCoroutine("StartPlatformMotion");
             _character.SendMessage("ActivateDoubleJump");
+            _character.SendMessage("ChangeRespawnPoint", _newRespawn.position);
         }
 
     }

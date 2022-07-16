@@ -6,6 +6,8 @@
 #Project folders with large assets
 /Assets/*
 !/Assets/Scenes/
+!/Assets/Animator/
+!/Assets/Scripts/
 
 /[Ll]ibrary/
 /[Tt]emp/

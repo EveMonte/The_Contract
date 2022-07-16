@@ -15,6 +15,7 @@ public class RelativeMovement : MonoBehaviour
     public float minFall = -1.5f;
     private float _vertSpeed;
     private ControllerColliderHit _contact;
+    private bool isntFake = true;
     private Animator _animator;
     private bool _canDoubleJump = false;
     private bool _gotDoubleJump = false;
@@ -26,7 +27,6 @@ public class RelativeMovement : MonoBehaviour
     private float vertSpeed;
     [SerializeField] private AnimationCurve _yAnimation;
 
-    private bool hitGround;
     void Start()
     {
         _charController = GetComponent<CharacterController>();
@@ -37,10 +37,11 @@ public class RelativeMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if(_animator.GetCurrentAnimatorClipInfo(0)[0].clip.name == "OUT")
+            Debug.Log(_animator.GetCurrentAnimatorStateInfo(0).normalizedTime);
         Vector3 movement = Vector3.zero;
         float vertInput = Input.GetAxis("Horizontal");
-        if (vertInput != 0 && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "OUT")
+        if (vertInput != 0 && (_animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "OUT" || (_animator.GetCurrentAnimatorClipInfo(0)[0].clip.name == "OUT" && _animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.9f)))
         {
             movement.z = vertInput * moveSpeed;
             movement = Vector3.ClampMagnitude(movement, moveSpeed);
@@ -49,21 +50,11 @@ public class RelativeMovement : MonoBehaviour
             transform.rotation = Quaternion.LookRotation(movement);
 
         _animator.SetFloat("Speed", movement.sqrMagnitude);
-        hitGround = false;
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + _charController.center, Vector3.down, out hit))
+
+        if (Physics.SphereCast(transform.position + _charController.center, _charController.radius / 1.5f, Vector3.down, out hit, (_charController.height + _charController.radius) / 2f) && isntFake) // character is on the ground
         {
-            float check = (_charController.height + _charController.radius) / 1.95f;
-            hitGround = hit.distance <= check;  // to be sure check slightly beyond bottom of capsule
-            //Debug.Log("distance " + hit.distance + " " + check);
-        }
-        if (hitGround) // character is on the ground
-        {
-            //Debug.Log("hit");
-            if (!isJumping)
-                _animator.SetBool("Jumping", false);
-            else
-                _animator.SetBool("Jumping", true);
+            _animator.SetBool("Jumping", false);
             _animator.SetBool("Falling", false);
             if (Input.GetButtonDown("Jump") && (!isJumping || _animator.GetBool("Falling")) && _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "OUT")
             {
@@ -77,7 +68,7 @@ public class RelativeMovement : MonoBehaviour
                 {
                     if (_contact.gameObject.tag == "disposable")
                     {
-                        _contact.gameObject.SendMessage("Break", jumpSpeed);
+                        _contact.gameObject.SendMessage("Break", jumpSpeed, SendMessageOptions.DontRequireReceiver);
                     }
                     _contact.gameObject.SendMessage("MoveUp", SendMessageOptions.DontRequireReceiver);
                 }
@@ -89,14 +80,34 @@ public class RelativeMovement : MonoBehaviour
         }
         else
         {
-            if (!isJumping)
+            if(_charController.transform.position.y < -6)
+            {
+                _animator.SetBool("Falling", false);
+                _animator.SetBool("Jumping", false);
+                _animator.SetBool("DoubleJump", false);
+
+                gameObject.SendMessage("MoveToSpawnPoint");
+
+                return;
+            }
                 _animator.SetBool("Falling", true);
+            if (_contact != null)
+            {
+                if (_contact.gameObject != null)
+                {
+                    if (_contact.gameObject.tag == "disposable")
+                    {
+                        _contact.gameObject.SendMessage("Break", jumpSpeed, SendMessageOptions.DontRequireReceiver);
+                    }
+                    _contact.gameObject.SendMessage("MoveUp", SendMessageOptions.DontRequireReceiver);
+                }
+
+            }
             if (Input.GetButtonDown("Jump") &&  _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name != "out")
             {
 
                 if (_canDoubleJump && _gotDoubleJump)
                 {
-                    Debug.Log("Double Jump");
                     if(_jumping != null)
                         StopCoroutine(_jumping);
                     _jumping = StartCoroutine(AnimationByTime(transform));
@@ -114,17 +125,17 @@ public class RelativeMovement : MonoBehaviour
             }
 
             // workaround for standing on dropoff edge
-            if (_charController.isGrounded)
-            {
-                if (Vector3.Dot(movement, _contact.normal) < 0)
-                {
-                    movement = _contact.normal * moveSpeed;
-                }
-                else
-                {
-                    movement += _contact.normal * moveSpeed;
-                }
-            }
+            //if (_charController.isGrounded)
+            //{
+            //    if (Vector3.Dot(movement, _contact.normal) < 0)
+            //    {
+            //        movement = _contact.normal * moveSpeed;
+            //    }
+            //    else
+            //    {
+            //        movement += _contact.normal * moveSpeed;
+            //    }
+            //}
         }
         movement.y = _vertSpeed;
         movement *= Time.deltaTime;
@@ -137,11 +148,17 @@ public class RelativeMovement : MonoBehaviour
         if (hit.gameObject.tag == "disposable")
         {
             hit.gameObject.SendMessage("Ready");
+            isntFake = true;
 
         }
         else if (hit.gameObject.tag == "fake")
         {
-            hit.gameObject.SendMessage("Break", jumpSpeed);
+            isntFake = false;
+            hit.gameObject.SendMessage("Break", jumpSpeed, SendMessageOptions.DontRequireReceiver);
+        }
+        else
+        {
+            isntFake = true;
         }
         hit.gameObject.SendMessage("MoveDown", SendMessageOptions.DontRequireReceiver);
     }
