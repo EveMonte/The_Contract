@@ -8,6 +8,7 @@
 !/Assets/Scenes/
 !/Assets/Animator/
 !/Assets/Scripts/
+!*.prefab
 
 /[Ll]ibrary/
 /[Tt]emp/
